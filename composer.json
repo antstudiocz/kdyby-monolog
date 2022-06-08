@@ -1,5 +1,5 @@
 {
-	"name": "kdyby/monolog",
+	"name": "antstudiocz/kdyby-monolog",
 	"type": "library",
 	"description": "Integration of Monolog into Nette Framework",
 	"keywords": ["nette", "monolog", "logging", "diagnostics"],
@@ -18,11 +18,11 @@
 		}
 	],
 	"require": {
-		"php": "^7.1  || ^7.2  || ^7.3",
+		"php": "^8.0 || ^8.1",
 		"nette/di": "^3.0",
-		"kdyby/strict-objects": "^2.0",
+		"kdyby/strict-objects": "dev-updates",
 		"monolog/monolog": "^2.0",
-		"tracy/tracy": "^2.7 || ^3.0"
+		"tracy/tracy": "<=2.7.9"
 	},
 	"require-dev": {
 		"nette/application": "^3.0",
@@ -30,9 +30,9 @@
 		"nette/caching": "^3.0",
 		"nette/http": "^3.0",
 		"nette/tester": "^2.2",
-		"phpstan/phpstan-shim": "^0.11.0@dev"
+		"phpstan/phpstan": "1.7.11"
 	},
-	"minimum-stability": "dev",
+	"minimum-stability": "stable",
 	"support": {
 		"email": "filip@prochazka.su",
 		"issues": "https://github.com/kdyby/monolog/issues"

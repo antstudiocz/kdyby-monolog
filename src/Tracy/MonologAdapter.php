@@ -54,8 +54,8 @@ class MonologAdapter extends \Tracy\Logger
 	public function __construct(
 		MonologLogger $monolog,
 		BlueScreenRenderer $blueScreenRenderer,
-		$email = NULL,
-		$accessPriority = self::INFO
+		?string $email = NULL,
+		string $accessPriority = self::INFO
 	)
 	{
 		parent::__construct($blueScreenRenderer->directory, $email);
@@ -80,11 +80,11 @@ class MonologAdapter extends \Tracy\Logger
 			'at' => Helpers::getSource(),
 		];
 
-		if ($originalMessage instanceof \Throwable || $originalMessage instanceof \Exception) {
+		if ($originalMessage instanceof \Throwable || $originalMessage instanceof \Exception) { // @phpstan-ignore-line
 			$context['exception'] = $originalMessage;
 		}
 
-		$exceptionFile = ($originalMessage instanceof \Throwable || $originalMessage instanceof \Exception)
+		$exceptionFile = ($originalMessage instanceof \Throwable || $originalMessage instanceof \Exception) // @phpstan-ignore-line
 			? $this->getExceptionFile($originalMessage)
 			: NULL;
 
@@ -102,7 +102,7 @@ class MonologAdapter extends \Tracy\Logger
 		}
 
 		$this->monolog->addRecord(
-			$this->getLevel($priority),
+			$this->getLevel($priority), // @phpstan-ignore-line
 			$message,
 			$context
 		);

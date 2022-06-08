@@ -36,14 +36,12 @@ use Tracy\ILogger;
 class MonologExtension extends \Nette\DI\CompilerExtension
 {
 
-	use \Kdyby\StrictObjects\Scream;
-
 	const TAG_HANDLER = 'monolog.handler';
 	const TAG_PROCESSOR = 'monolog.processor';
 	const TAG_PRIORITY = 'monolog.priority';
 
 	/** @var array */
-	protected $config = [];
+	protected $config = []; // @phpstan-ignore-line
 
 	public function getConfigSchema(): Schema
 	{
@@ -106,7 +104,7 @@ class MonologExtension extends \Nette\DI\CompilerExtension
 		$this->setConfig($config);
 	}
 
-	protected function loadHandlers(array $config): void
+	protected function loadHandlers(array $config): void // @phpstan-ignore-line
 	{
 		$builder = $this->getContainerBuilder();
 
@@ -120,7 +118,7 @@ class MonologExtension extends \Nette\DI\CompilerExtension
 		}
 	}
 
-	protected function loadProcessors(array $config): void
+	protected function loadProcessors(array $config): void // @phpstan-ignore-line
 	{
 		$builder = $this->getContainerBuilder();
 
@@ -168,11 +166,11 @@ class MonologExtension extends \Nette\DI\CompilerExtension
 		$logger = $builder->getDefinition($this->prefix('logger'));
 
 		foreach ($handlers = $this->findByTagSorted(self::TAG_HANDLER) as $serviceName => $meta) {
-			$logger->addSetup('pushHandler', ['@' . $serviceName]);
+			$logger->addSetup('pushHandler', ['@' . $serviceName]); // @phpstan-ignore-line
 		}
 
 		foreach ($this->findByTagSorted(self::TAG_PROCESSOR) as $serviceName => $meta) {
-			$logger->addSetup('pushProcessor', ['@' . $serviceName]);
+			$logger->addSetup('pushProcessor', ['@' . $serviceName]); // @phpstan-ignore-line
 		}
 
 		if (empty($handlers) && !array_key_exists('registerFallback', $this->config)) {
@@ -180,8 +178,8 @@ class MonologExtension extends \Nette\DI\CompilerExtension
 		}
 
 		if (array_key_exists('registerFallback', $this->config) && !empty($this->config['registerFallback'])) {
-			$logger->addSetup('pushHandler', [
-				new Statement(FallbackNetteHandler::class, [
+			$logger->addSetup('pushHandler', [ // @phpstan-ignore-line
+				new Nette\DI\Definitions\Statement(FallbackNetteHandler::class, [
 					'appName' => $this->config['name'],
 					'logDir' => $this->config['logDir'],
 				]),
@@ -190,11 +188,11 @@ class MonologExtension extends \Nette\DI\CompilerExtension
 
 		/** @var \Nette\DI\ServiceDefinition $service */
 		foreach ($builder->findByType(LoggerAwareInterface::class) as $service) {
-			$service->addSetup('setLogger', ['@' . $this->prefix('logger')]);
+			$service->addSetup('setLogger', ['@' . $this->prefix('logger')]); // @phpstan-ignore-line
 		}
 	}
 
-	protected function findByTagSorted($tag): array
+	protected function findByTagSorted(?string $tag): array // @phpstan-ignore-line
 	{
 		$builder = $this->getContainerBuilder();
 
@@ -227,7 +225,7 @@ class MonologExtension extends \Nette\DI\CompilerExtension
 	/**
 	 * @return string
 	 */
-	private static function resolveLogDir(array $parameters): string
+	private static function resolveLogDir(array $parameters): string // @phpstan-ignore-line
 	{
 		if (isset($parameters['logDir'])) {
 			return DIHelpers::expand('%logDir%', $parameters);

@@ -92,9 +92,9 @@ class CustomChannel extends \Kdyby\Monolog\Logger
 	 * This method allows for compatibility with common interfaces.
 	 *
 	 * @param string $message The log message
-	 * @param array  $context The log context
+	 * @param array<string>  $context The log context
 	 */
-	public function addDebug($message, array $context = []): void
+	public function addDebug(?string $message, array $context = []): void
 	{
 		$this->parentLogger->debug($message, array_merge(['channel' => $this->name], $context));
 	}
@@ -105,9 +105,9 @@ class CustomChannel extends \Kdyby\Monolog\Logger
 	 * This method allows for compatibility with common interfaces.
 	 *
 	 * @param string $message The log message
-	 * @param array  $context The log context
+	 * @param array<string>  $context The log context
 	 */
-	public function addInfo($message, array $context = []): void
+	public function addInfo(?string $message, array $context = []): void
 	{
 		$this->parentLogger->info($message, array_merge(['channel' => $this->name], $context));
 	}
@@ -118,9 +118,9 @@ class CustomChannel extends \Kdyby\Monolog\Logger
 	 * This method allows for compatibility with common interfaces.
 	 *
 	 * @param string $message The log message
-	 * @param array  $context The log context
+	 * @param array<string>  $context The log context
 	 */
-	public function addNotice($message, array $context = []): void
+	public function addNotice(?string $message, array $context = []): void
 	{
 		$this->parentLogger->notice($message, array_merge(['channel' => $this->name], $context));
 	}
@@ -131,9 +131,9 @@ class CustomChannel extends \Kdyby\Monolog\Logger
 	 * This method allows for compatibility with common interfaces.
 	 *
 	 * @param string $message The log message
-	 * @param array  $context The log context
+	 * @param array<string>  $context The log context
 	 */
-	public function addWarning($message, array $context = []): void
+	public function addWarning(?string $message, array $context = []): void
 	{
 		$this->parentLogger->warning($message, array_merge(['channel' => $this->name], $context));
 	}
@@ -144,9 +144,9 @@ class CustomChannel extends \Kdyby\Monolog\Logger
 	 * This method allows for compatibility with common interfaces.
 	 *
 	 * @param string $message The log message
-	 * @param array  $context The log context
+	 * @param array<string>  $context The log context
 	 */
-	public function addError($message, array $context = []): void
+	public function addError(?string $message, array $context = []): void
 	{
 		$this->parentLogger->error($message, array_merge(['channel' => $this->name], $context));
 	}
@@ -157,9 +157,9 @@ class CustomChannel extends \Kdyby\Monolog\Logger
 	 * This method allows for compatibility with common interfaces.
 	 *
 	 * @param string $message The log message
-	 * @param array  $context The log context
+	 * @param array<string>  $context The log context
 	 */
-	public function addCritical($message, array $context = []): void
+	public function addCritical(?string $message, array $context = []): void
 	{
 		$this->parentLogger->critical($message, array_merge(['channel' => $this->name], $context));
 	}
@@ -170,9 +170,9 @@ class CustomChannel extends \Kdyby\Monolog\Logger
 	 * This method allows for compatibility with common interfaces.
 	 *
 	 * @param string $message The log message
-	 * @param array  $context The log context
+	 * @param array<string>  $context The log context
 	 */
-	public function addAlert($message, array $context = []): void
+	public function addAlert(?string $message, array $context = []): void
 	{
 		$this->parentLogger->alert($message, array_merge(['channel' => $this->name], $context));
 	}
@@ -183,9 +183,9 @@ class CustomChannel extends \Kdyby\Monolog\Logger
 	 * This method allows for compatibility with common interfaces.
 	 *
 	 * @param string $message The log message
-	 * @param array  $context The log context
+	 * @param array<string>  $context The log context
 	 */
-	public function addEmergency($message, array $context = []): void
+	public function addEmergency(?string $message, array $context = []): void
 	{
 		$this->parentLogger->emergency($message, array_merge(['channel' => $this->name], $context));
 	}
@@ -238,9 +238,9 @@ class CustomChannel extends \Kdyby\Monolog\Logger
 	 * This method allows for compatibility with common interfaces.
 	 *
 	 * @param string $message The log message
-	 * @param array  $context The log context
+	 * @param array<string>  $context The log context
 	 */
-	public function warn($message, array $context = []): void
+	public function warn(?string $message, array $context = []): void
 	{
 		$this->parentLogger->warning($message, array_merge(['channel' => $this->name], $context));
 	}
@@ -259,9 +259,9 @@ class CustomChannel extends \Kdyby\Monolog\Logger
 	 * This method allows for compatibility with common interfaces.
 	 *
 	 * @param string $message The log message
-	 * @param array  $context The log context
+	 * @param array<string>  $context The log context
 	 */
-	public function err($message, array $context = []): void
+	public function err(?string $message, array $context = []): void
 	{
 		$this->parentLogger->error($message, array_merge(['channel' => $this->name], $context));
 	}
@@ -280,9 +280,9 @@ class CustomChannel extends \Kdyby\Monolog\Logger
 	 * This method allows for compatibility with common interfaces.
 	 *
 	 * @param string $message The log message
-	 * @param array  $context The log context
+	 * @param array<string>  $context The log context
 	 */
-	public function crit($message, array $context = []): void
+	public function crit(?string $message, array $context = []): void
 	{
 		$this->parentLogger->critical($message, array_merge(['channel' => $this->name], $context));
 	}
@@ -309,9 +309,9 @@ class CustomChannel extends \Kdyby\Monolog\Logger
 	 * This method allows for compatibility with common interfaces.
 	 *
 	 * @param string $message The log message
-	 * @param array  $context The log context
+	 * @param array<string>  $context The log context
 	 */
-	public function emerg($message, array $context = []): void
+	public function emerg(?string $message, array $context = []): void
 	{
 		$this->parentLogger->emergency($message, array_merge(['channel' => $this->name], $context));
 	}

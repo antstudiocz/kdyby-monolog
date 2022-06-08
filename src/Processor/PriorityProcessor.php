@@ -21,7 +21,7 @@ class PriorityProcessor
 
 	use \Kdyby\StrictObjects\Scream;
 
-	public function __invoke($record)
+	public function __invoke(array $record): array // @phpstan-ignore-line
 	{
 		if (isset($record['context']['channel'])) {
 			$record['channel'] = $record['context']['channel'];
