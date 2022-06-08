@@ -27,7 +27,7 @@ class TracyExceptionProcessor
 		$this->blueScreenRenderer = $blueScreenRenderer;
 	}
 
-	public function __invoke(array $record)
+	public function __invoke(array $record): array // @phpstan-ignore-line
 	{
 		if (!$this->isHandling($record)) {
 			return $record;
@@ -45,7 +45,7 @@ class TracyExceptionProcessor
 		return $record;
 	}
 
-	public function isHandling(array $record): bool
+	public function isHandling(array $record): bool // @phpstan-ignore-line
 	{
 		return !isset($record['context']['tracy'])
 			&& !isset($record['context']['tracy_filename'])

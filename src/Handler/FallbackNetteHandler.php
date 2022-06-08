@@ -42,7 +42,7 @@ class FallbackNetteHandler extends \Monolog\Handler\ErrorLogHandler
 	 */
 	private $priorityFormatter;
 
-	public function __construct($appName, $logDir, $expandNewlines = FALSE, $level = MonologLogger::DEBUG)
+	public function __construct(?string $appName, ?string $logDir, $expandNewlines = FALSE, $level = MonologLogger::DEBUG)
 	{
 		parent::__construct(self::SAPI, $level, TRUE, $expandNewlines);
 		$this->appName = $appName;
@@ -83,7 +83,7 @@ class FallbackNetteHandler extends \Monolog\Handler\ErrorLogHandler
 			$entry = preg_replace('#\s*\r?\n\s*#', ' ', trim($record['formatted'])) . PHP_EOL;
 		}
 
-		$file = $this->logDir . '/' . strtolower($record['filename'] ?: 'info') . '.log';
+		$file = $this->logDir . '/' . strtolower($record['filename'] ?: 'info') . '.log'; // @phpstan-ignore-line
 		if (!@file_put_contents($file, $entry, FILE_APPEND | LOCK_EX)) {
 			throw new \RuntimeException(sprintf('Unable to write to log file %s. Is directory writable?', $file));
 		}

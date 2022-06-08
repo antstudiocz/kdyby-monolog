@@ -17,7 +17,7 @@ class BlueScreenRenderer extends \Tracy\Logger
 
 	use \Kdyby\StrictObjects\Scream;
 
-	public function __construct($directory, BlueScreen $blueScreen)
+	public function __construct(?string $directory, BlueScreen $blueScreen)
 	{
 		parent::__construct($directory, NULL, $blueScreen);
 	}
