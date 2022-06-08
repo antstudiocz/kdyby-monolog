@@ -19,6 +19,7 @@ jobs:
 
       - run: composer install
       - run: vendor/bin/tester tests -C
+      - run: vendor/bin/phpstan analyse --ansi --no-progress -l7 -c phpstan.neon src tests/KdybyTests
 
 
 
