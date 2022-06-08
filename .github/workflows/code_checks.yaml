@@ -1,0 +1,24 @@
+on: [push, pull_request]
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }}
+    runs-on: macos-latest
+
+    strategy:
+      matrix:
+        php: ['7.1', '7.2', '7.3']
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - run: composer install
+      - run: vendor/bin/tester tests -C
+
+
+
