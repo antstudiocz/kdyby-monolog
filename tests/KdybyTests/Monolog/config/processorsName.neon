@@ -1,0 +1,6 @@
+monolog:
+	tracyBaseUrl: https://exceptions.kdyby.org
+	processors:
+		git: Monolog\Processor\GitProcessor()
+		processId: Monolog\Processor\ProcessIdProcessor()
+		web: Monolog\Processor\WebProcessor()
