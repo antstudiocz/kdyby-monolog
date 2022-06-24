@@ -36,9 +36,44 @@ use Tracy\ILogger;
 class MonologExtension extends \Nette\DI\CompilerExtension
 {
 
+	const TAG_FORMATTER = 'monolog.formatter';
 	const TAG_HANDLER = 'monolog.handler';
 	const TAG_PROCESSOR = 'monolog.processor';
 	const TAG_PRIORITY = 'monolog.priority';
+	const TAG_LOGGER = 'monolog.logger';
+
+	/** @var array */
+	public $defaults = [ // @phpstan-ignore-line
+		'formatters' => [
+			'chromePHP' => \Monolog\Formatter\ChromePHPFormatter::class,
+			'fluentd' => \Monolog\Formatter\FluentdFormatter::class,
+			'gelfMessage' => \Monolog\Formatter\GelfMessageFormatter::class,
+			'html' => \Monolog\Formatter\HtmlFormatter::class,
+			'json' => \Monolog\Formatter\JsonFormatter::class,
+			'line' => \Monolog\Formatter\LineFormatter::class,
+			'loggly' => \Monolog\Formatter\LogglyFormatter::class,
+			'mongoDB' => \Monolog\Formatter\MongoDBFormatter::class,
+			'normalizer' => \Monolog\Formatter\NormalizerFormatter::class,
+			'scalar' => \Monolog\Formatter\ScalarFormatter::class,
+			'wildfire' => \Monolog\Formatter\WildfireFormatter::class,
+		],
+		'processors' => [
+			'git' => \Monolog\Processor\GitProcessor::class,
+			'introspection' => \Monolog\Processor\IntrospectionProcessor::class,
+			'memoryPeakUsage' => \Monolog\Processor\MemoryPeakUsageProcessor::class,
+			'memoryUsage' => \Monolog\Processor\MemoryUsageProcessor::class,
+			'processId' => \Monolog\Processor\ProcessIdProcessor::class,
+			'psrLogMessage' => \Monolog\Processor\PsrLogMessageProcessor::class,
+			'tag' => \Monolog\Processor\TagProcessor::class,
+			'uid' => \Monolog\Processor\UidProcessor::class,
+			'web' => \Monolog\Processor\WebProcessor::class,
+		],
+		'handlers' => [
+			'errorLog' => [
+				'class' => \Monolog\Handler\ErrorLogHandler::class,
+			],
+		],
+	];
 
 	/** @var array */
 	protected $config = []; // @phpstan-ignore-line
@@ -46,19 +81,158 @@ class MonologExtension extends \Nette\DI\CompilerExtension
 	public function getConfigSchema(): Schema
 	{
 		return Expect::structure([
-			'handlers' => Expect::anyOf(Expect::arrayOf('Nette\DI\Definitions\Statement'), 'false')->default([]),
+			'handlers' => Expect::anyOf(Expect::arrayOf('array'), 'false')->default([]),
 			'processors' => Expect::anyOf(Expect::arrayOf('Nette\DI\Definitions\Statement'), 'false')->default([]),
 			'name' => Expect::string('app'),
 			'hookToTracy' => Expect::bool(TRUE),
 			'tracyBaseUrl' => Expect::string(),
+			'registerFallback' => Expect::bool( TRUE),
 			'usePriorityProcessor' => Expect::bool(TRUE),
 			'accessPriority' => Expect::string(ILogger::INFO),
 			'logDir' => Expect::string(),
+			'loggers' => Expect::anyOf(Expect::arrayOf('array'), 'false')->default([]),
 		])->castTo('array');
 	}
 
 	public function loadConfiguration(): void
 	{
+		$builder = $this->getContainerBuilder();
+		$config = $this->getConfig();
+
+		//FORMATTERS
+		$formatters = $this->defaults['formatters'];
+		if (is_array($config)) {
+			$formatters = ($config['formatters'] ?? []) + $formatters;
+		}
+		if ($formatters) {
+			foreach ($formatters as $formatterName => $formatter) {
+				$this->compiler->loadDefinitionsFromConfig([
+					$this->prefix('formatter.' . $formatterName) => [
+						'factory' => $formatter,
+						'tags' => [
+							self::TAG_FORMATTER,
+						],
+					],
+				]);
+			}
+		}
+
+		//PROCESSORS
+		$processors = $this->defaults['processors'];
+		if (is_array($config)) {
+			$processors = ($config['processors'] ?? []) + $processors;
+		}
+		foreach ($processors as $processorName => $processor) {
+			$this->compiler->loadDefinitionsFromConfig([
+				$this->prefix('processor.' . $processorName) => [
+					'factory' => $processor,
+					'tags' => [
+						self::TAG_PROCESSOR,
+					],
+				],
+			]);
+		}
+
+		//HANDLERS
+		$handlers = $this->defaults['handlers'];
+		if (is_array($config)) {
+			$handlers = ($config['handlers'] ?? []) + $handlers;
+		}
+		if (!empty($handlers)) {
+			foreach ($handlers as $handlerName => $handlerConfig) {
+				if (is_string($handlerConfig)) {
+					$message = 'Wrong handler format. Handlers configuration must be in this format:' .
+						"\n\nhandlers:\n\t{$handlerName}:\n\t\tclass: $handlerConfig\n\t\t[formatter: formatterName]\n\t\t[processors: [processorName, ...]]";
+					throw new \Nette\UnexpectedValueException($message);
+				}
+
+				$this->compiler->loadDefinitionsFromConfig([
+					$serviceName = $this->prefix('handler.' . $handlerName) => [
+						'factory' => $handlerConfig['class'],
+						'tags' => [
+							'kdyby.' . self::TAG_HANDLER,
+						],
+					],
+				]);
+				$handler = $builder->getDefinition($serviceName);
+
+				if (isset($handlerConfig['formatter'])) {
+					$handler->addSetup('?->setFormatter(?)', [ // @phpstan-ignore-line
+						'@self',
+						$builder->getDefinition($this->prefix('formatter.' . $handlerConfig['formatter'])),
+					]);
+				}
+
+				if (isset($handlerConfig['processors'])) {
+					foreach (array_reverse($handlerConfig['processors']) as $handlerName) {
+						$handler->addSetup('?->pushProcessor(?)', [ // @phpstan-ignore-line
+							'@self',
+							$builder->getDefinition($this->prefix('processor.' . $handlerName)),
+						]);
+					}
+				}
+			}
+		}
+
+
+		//LOGGERS
+		$loggers = [];
+		if (is_array($config)) {
+			$loggers = ($config['loggers'] ?? []);
+		}
+		if (isset($loggers)) {
+			foreach ($loggers as $loggerName => $loggerConfig) {
+				if ($loggerName === 'global') {
+					continue;
+				}
+
+				if (is_string($loggerConfig)) {
+					$message = 'Wrong logger format. Loggers configuration must be in this format:' .
+						"\n\nloggers:\n\t{$loggerName}:\n\t\tclass: $loggerConfig\n\t\t[processors: [processorName, ...]]\n\t\t[handlers: [handlerName, ...]]";
+					throw new \Nette\UnexpectedValueException($message);
+				}
+
+				$this->compiler->loadDefinitionsFromConfig([
+					$serviceName = $this->prefix('logger.' . $loggerName) => [
+						'factory' => $loggerConfig['class'],
+						'arguments' => [
+							'name' => $loggerName,
+						],
+						'tags' => [
+							self::TAG_LOGGER,
+						],
+						'autowired' => $loggerConfig['autowired'] ? [$loggerConfig['autowired']] : TRUE, //TODO: are u sure?
+					],
+				]);
+
+				$logger = $builder->getDefinition($serviceName);
+
+				if (isset($loggerConfig['processors'])) {
+					foreach (array_reverse($loggerConfig['processors']) as $processorName) {
+						$logger->addSetup('?->pushProcessor(?)', [ // @phpstan-ignore-line
+							'@self',
+							$builder->getDefinition($this->prefix('processor.' . $processorName)),
+						]);
+					}
+				}
+
+				if (isset($loggerConfig['handlers'])) {
+					foreach (array_reverse($loggerConfig['handlers']) as $handlerName) {
+						$logger->addSetup('?->pushHandler(?)', [ // @phpstan-ignore-line
+							'@self',
+							$builder->getDefinition($this->prefix('handler.' . $handlerName)),
+						]);
+					}
+				}
+			}
+		}
+
+		if (is_array($config)) {
+			unset($config['handlers']); //handled by this extension
+			unset($config['processors']); //handled by this extension
+		}
+		$this->setConfig($config);
+
 		$builder = $this->getContainerBuilder();
 		$this->config['logDir'] = self::resolveLogDir($builder->parameters);
 		$config = $this->config;
@@ -108,14 +282,17 @@ class MonologExtension extends \Nette\DI\CompilerExtension
 	{
 		$builder = $this->getContainerBuilder();
 
-		foreach ($config['handlers'] as $handlerName => $implementation) {
+		if (!empty($config['handlers'])) {
+			foreach ($config['handlers'] as $handlerName => $implementation) {
 
-			$builder->addDefinition($this->prefix('handler.' . $handlerName))
-				->setFactory($implementation)
-				->setAutowired(FALSE)
-				->addTag(self::TAG_HANDLER)
-				->addTag(self::TAG_PRIORITY, is_numeric($handlerName) ? $handlerName : 0);
+				$builder->addDefinition($this->prefix('handler.' . $handlerName))
+					->setFactory($implementation)
+					->setAutowired(FALSE)
+					->addTag(self::TAG_HANDLER)
+					->addTag(self::TAG_PRIORITY, is_numeric($handlerName) ? $handlerName : 0);
+			}
 		}
+
 	}
 
 	protected function loadProcessors(array $config): void // @phpstan-ignore-line
@@ -147,20 +324,58 @@ class MonologExtension extends \Nette\DI\CompilerExtension
 				->addTag(self::TAG_PRIORITY, 10);
 		}
 
-		foreach ($config['processors'] as $processorName => $implementation) {
+		if (!empty($config['processors'])) {
+			foreach ($config['processors'] as $processorName => $implementation) {
 
-			$this->compiler->loadDefinitionsFromConfig([
-				$serviceName = $this->prefix('processor.' . $processorName) => $implementation,
-			]);
+				$this->compiler->loadDefinitionsFromConfig([
+					$serviceName = $this->prefix('processor.' . $processorName) => $implementation,
+				]);
 
-			$builder->getDefinition($serviceName)
-				->addTag(self::TAG_PROCESSOR)
-				->addTag(self::TAG_PRIORITY, is_numeric($processorName) ? $processorName : 0);
+				$builder->getDefinition($serviceName)
+					->addTag(self::TAG_PROCESSOR)
+					->addTag(self::TAG_PRIORITY, is_numeric($processorName) ? $processorName : 0);
+			}
 		}
+
 	}
 
 	public function beforeCompile(): void
 	{
+		$config = $this->getConfig();
+
+		$loggers = [];
+		if (is_array($config)) {
+			$loggers = ($config['loggers'] ?? []);
+		}
+		if (isset($loggers)) {
+			if (isset($loggers['global'])) {
+				$builder = $this->getContainerBuilder();
+				$globalConfig = $loggers['global'];
+
+				if (isset($globalConfig['handlers'])) {
+					foreach (array_reverse($globalConfig['handlers']) as $handlerName) {
+						foreach ($builder->findByType(\Kdyby\Monolog\Logger::class) as $globalLogger) {
+							$globalLogger->addSetup('?->pushHandler(?)', [ // @phpstan-ignore-line
+								'@self',
+								$builder->getDefinition($this->prefix('handler.' . $handlerName)),
+							]);
+						}
+					}
+				}
+
+				if (isset($globalConfig['processors'])) {
+					foreach (array_reverse($globalConfig['processors']) as $processorName) {
+						foreach ($builder->findByType(\Kdyby\Monolog\Logger::class) as $globalLogger) {
+							$globalLogger->addSetup('?->pushProcessor(?)', [ // @phpstan-ignore-line
+								'@self',
+								$builder->getDefinition($this->prefix('processor.' . $processorName)),
+							]);
+						}
+					}
+				}
+			}
+		}
+
 		$builder = $this->getContainerBuilder();
 		/** @var \Nette\DI\ServiceDefinition $logger */
 		$logger = $builder->getDefinition($this->prefix('logger'));
