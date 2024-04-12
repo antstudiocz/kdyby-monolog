@@ -21,7 +21,7 @@
 		"php": "^8.0 || ^8.1",
 		"nette/di": "^3.0",
 		"kdyby/strict-objects": "dev-updates",
-		"monolog/monolog": "^2.0",
+		"monolog/monolog": "^2.7",
 		"tracy/tracy": "<=2.7.9"
 	},
 	"require-dev": {
