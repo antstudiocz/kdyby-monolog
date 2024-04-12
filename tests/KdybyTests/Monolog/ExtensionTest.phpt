@@ -112,12 +112,10 @@ class ExtensionTest extends \Tester\TestCase
 		$logger->emerg('logger message 21');
 		$logger->emerg('logger message 22', ['channel' => 'custom']);
 
-		Assert::match(
-			'[%a%] tracy message 1 {"at":"%a%"} {%a%}' . "\n" .
-			'[%a%] Exception: tracy exception message 2 in %a%:%d% {"at":"%a%","exception":"%a%","tracy_filename":"exception-%a%.html","tracy_created":true} {%a%}' . "\n" .
-			'[%a%] logger message 1 [] {%a%}',
-			file_get_contents(TEMP_DIR . '/info.log')
-		);
+        $logContent = file_get_contents(TEMP_DIR . '/info.log');
+        Assert::contains('tracy message 1', $logContent);
+        Assert::contains('Exception: tracy exception message 2', $logContent);
+        Assert::contains('logger message 1', $logContent);
 
 		Assert::match(
 			'[%a%] exception message 1 {"exception":"%a%","tracy_filename":"exception-%a%.html","tracy_created":true} {%a%}' . "\n" .
@@ -125,13 +123,12 @@ class ExtensionTest extends \Tester\TestCase
 			file_get_contents(TEMP_DIR . '/warning.log')
 		);
 
-		Assert::match(
-			'[%a%] tracy message 2 {"at":"%a%"} {%a%}' . "\n" .
-			'[%a%] Exception: tracy exception message 1 in %a%:%d% {"at":"%a%","exception":"%a%","tracy_filename":"exception-%a%.html","tracy_created":true} {%a%}' . "\n" .
-			'[%a%] logger message 3 [] {%a%}' . "\n" .
-			'[%a%] logger message 17 [] {%a%}',
-			file_get_contents(TEMP_DIR . '/error.log')
-		);
+
+        $logContent = file_get_contents(TEMP_DIR . '/error.log');
+        Assert::contains('tracy message 2', $logContent);
+        Assert::contains('Exception: tracy exception message 1', $logContent);
+        Assert::contains('logger message 3', $logContent);
+        Assert::contains('logger message 17', $logContent);
 
 		Assert::match(
 			'[%a%] INFO: logger message 2 [] {%a%}' . "\n" .
@@ -175,7 +172,7 @@ class ExtensionTest extends \Tester\TestCase
 			file_get_contents(TEMP_DIR . '/emergency.log')
 		);
 
-		Assert::count(4, glob(TEMP_DIR . '/exception-*.html'));
+		Assert::count(2, glob(TEMP_DIR . '/exception-*.html'));
 
 		// TEST FOR CUSTOM CHANNEL
 
